@@ -1,0 +1,24 @@
+name: Build Aura
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - run: unzip -q AuraLauncher.zip
+      - working-directory: AuraLauncher
+        run: gradle assembleRelease --no-daemon
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp AuraLauncher/app/build/outputs/apk/release/*.apk aura.apk
+          gh release create aura-${{ github.run_number }} aura.apk --title "Aura build ${{ github.run_number }}"
